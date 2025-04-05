@@ -1,18 +1,26 @@
 ﻿using AudioDeviceManagerLibrary;
+using System.Reflection;
 
 internal class Program
 {
     private static void Main(string[] args)
     {
-        //Console.WriteLine("Hello, World!");
-
         AudioDeviceManager audioDeviceManager = new();
+
+        var assembly = Assembly.GetExecutingAssembly();
+        var productAttribute = assembly.GetCustomAttribute<AssemblyProductAttribute>();
+        string productName = productAttribute?.Product ?? "Unknown Product";
+
+        // Retrieve the AssemblyVersion
+        string productVersion = assembly.GetName().Version?.ToString() ?? "Unknown Version";
 
         if( ( args.Length == 0 || args.Where(x => x.ToLower().Equals("/h")).Any() ) || args.Where(x => x.ToLower().Equals("/l")).Any() )
         {
+            Console.WriteLine($"{productName} {productVersion}");
+
             Console.WriteLine("Playback (Output) devices");
 
-            var playbackDevices = audioDeviceManager.GetPlaybackDevices();
+            var playbackDevices = audioDeviceManager.ListPlaybackDevices();
             for( int i = 0; i < playbackDevices.Count; i++ )
             {
                 var device = playbackDevices[i];
@@ -29,7 +37,11 @@ internal class Program
 
             Console.WriteLine("");
             Console.WriteLine("Format:  AudioDeviceManager /input:<index> to set the default input device to the device indexed in the Input devices list shown above.");
+            Console.WriteLine("Format:  AudioDeviceManager /input:<\"name\"> to set the default input device to the device that starts with \"name\" in the Input devices list shown above.");
+
             Console.WriteLine("Format:  AudioDeviceManager /output:<index> to set the default playback device to the device indexed in the Playback (Output) devices list shown above.");
+            Console.WriteLine("Format:  AudioDeviceManager /output:<\"name\"> to set the default input device to the device that starts with \"name\" in the Playback (Output)  devices list shown above.");
+
             Console.WriteLine("Format:  AudioDeviceManager /input:<index> /output:<index>");
             Console.WriteLine("");
 
@@ -37,7 +49,7 @@ internal class Program
 
         else
         {
-            string? argOfInterest = args.FirstOrDefault(name => name.ToLower().Contains("/input:"));
+            string? argOfInterest = args.FirstOrDefault(name => name.Contains("/input:", StringComparison.CurrentCultureIgnoreCase));
             if( argOfInterest != null )
             {
                 argOfInterest = argOfInterest.Split("/input:")[1];
@@ -48,10 +60,18 @@ internal class Program
                     else
                         Console.WriteLine("Input Device  not changed");
                 }
+                else
+                {
+                    if( audioDeviceManager.SetDefaulInputDeviceByName(argOfInterest) )
+                        Console.WriteLine("Playback Device changed");
+                    else
+                        Console.WriteLine("Playback Device not changed");
+                }
+
 
             }
-        again:
-            argOfInterest = args.FirstOrDefault(name => name.ToLower().Contains("/output:"));
+
+            argOfInterest = args.FirstOrDefault(name => name.Contains("/output:", StringComparison.CurrentCultureIgnoreCase));
             if( argOfInterest != null )
             {
                 argOfInterest = argOfInterest.Split("/output:")[1];
@@ -60,17 +80,18 @@ internal class Program
                     if( audioDeviceManager.SetDefaultPlaybackDeviceByIndex(value) )
                         Console.WriteLine("Playback Device changed");
                     else
-                        Console.WriteLine("PlaybackD evice not changed");
+                        Console.WriteLine("Playback Device not changed");
+                }
+                else
+                {
+                    if( audioDeviceManager.SetDefaultPlaybackDeviceByName(argOfInterest) )
+                        Console.WriteLine("Playback Device changed");
+                    else
+                        Console.WriteLine("Playback Device not changed");
                 }
 
             }
 
-            //goto again;
-
-            /*
-             var filteredArgs = args.Where(name => name != "/h").ToList();
-            foreach( string arg in filteredArgs ){}
-            */
         }
 
         /*

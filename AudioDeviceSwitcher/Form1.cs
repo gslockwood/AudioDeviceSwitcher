@@ -1,5 +1,3 @@
-using AudioDeviceManagerLibrary;
-
 namespace AudioDeviceSwitcher
 {
     public partial class Form1 : Form
@@ -7,7 +5,7 @@ namespace AudioDeviceSwitcher
         public Form1()
         {
             InitializeComponent();
-
+            /*
             AudioDeviceManager audioDeviceManager = new();
 
             System.Diagnostics.Debug.WriteLine("Output devices");
@@ -16,7 +14,7 @@ namespace AudioDeviceSwitcher
             foreach( var device in playbackDevices )
                 System.Diagnostics.Debug.WriteLine($"{device.FriendlyName} {device.State} {device.IsDefaultConsoleDevice}");
 
-            audioDeviceManager.SetDefaultPlaybackDevice(playbackDevices[0].Id);
+            AudioDeviceManager.SetDefaultPlaybackDevice(playbackDevices[0].Id);
             foreach( var device in audioDeviceManager.GetPlaybackDevices() )
                 System.Diagnostics.Debug.WriteLine($"{device.FriendlyName} {device.State} {device.IsDefaultConsoleDevice}");
 
@@ -27,7 +25,7 @@ namespace AudioDeviceSwitcher
                 System.Diagnostics.Debug.WriteLine($"{device.FriendlyName} {device.State} {device.IsDefaultConsoleDevice}");
 
             audioDeviceManager.SetDefaulInputDevice(inputDevices[2].Id);
-
+            */
 
         }
     }

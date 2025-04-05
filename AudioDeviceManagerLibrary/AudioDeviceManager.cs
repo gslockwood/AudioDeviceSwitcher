@@ -63,7 +63,7 @@ namespace AudioDeviceManagerLibrary
         /// Gets a list of all active audio playback devices.
         /// </summary>
         /// <returns>A list of AudioDevice objects.</returns>
-        public List<AudioDevice> GetPlaybackDevices()
+        public List<AudioDevice> ListPlaybackDevices()
         {
             var devices = new List<AudioDevice>();
             MMDevice? defaultConsoleDevice = null;
@@ -129,7 +129,7 @@ namespace AudioDeviceManagerLibrary
         /// </summary>
         /// <param name="deviceId">The unique system identifier of the device to set as default.</param>
         /// <returns>True if successful, False otherwise.</returns>
-        public bool SetDefaultPlaybackDevice(string deviceId)
+        public static bool SetDefaultPlaybackDevice(string deviceId)
         {
             if( string.IsNullOrWhiteSpace(deviceId) )
             {
@@ -194,17 +194,31 @@ namespace AudioDeviceManagerLibrary
             }
         }
 
-        public bool SetDefaultPlaybackDeviceByIndex(int index)
+        public bool SetDefaultPlaybackDeviceByName(string name)
         {
-            List<AudioDevice> outputDevices = GetPlaybackDevices();
-            AudioDevice device = outputDevices[index];
-            if( device != null && device.Id != null )
-                return this.SetDefaultPlaybackDevice(device.Id);
+            List<AudioDevice> outputDevices = ListPlaybackDevices();
+            IEnumerable<AudioDevice> found = outputDevices.Where(x => x.FriendlyName != null && x.FriendlyName.StartsWith(name));
+            if( found.Any() )
+            {
+                AudioDevice device = found.First();
+                if( device != null && device.Id != null )
+                    return SetDefaultPlaybackDevice(device.Id);
+            }
 
             return false;
 
         }
 
+        public bool SetDefaultPlaybackDeviceByIndex(int index)
+        {
+            List<AudioDevice> outputDevices = ListPlaybackDevices();
+            AudioDevice device = outputDevices[index];
+            if( device != null && device.Id != null )
+                return SetDefaultPlaybackDevice(device.Id);
+
+            return false;
+
+        }
 
 
 
@@ -227,6 +241,8 @@ namespace AudioDeviceManagerLibrary
 
         public List<AudioDevice> ListInputDevices(DeviceState deviceState = DeviceState.Active)
         {
+            if( _deviceEnumerator == null ) throw new NullReferenceException(nameof(_deviceEnumerator));
+
             var devices = new List<AudioDevice>();
 
             try
@@ -238,13 +254,15 @@ namespace AudioDeviceManagerLibrary
                 // Role.Console is typically used for general audio applications (games, media players)
                 if( _deviceEnumerator.HasDefaultAudioEndpoint(DataFlow.Capture, Role.Console) )
                 {
-                    defaultDeviceId = _deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Capture, Role.Console)?.ID;
+                    MMDevice temp = _deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Capture, Role.Console) ?? throw new NullReferenceException(nameof(_deviceEnumerator.GetDefaultAudioEndpoint));
+                    defaultDeviceId = temp.ID;
                 }
 
                 // Role.Communications is used for communication apps (VoIP, Teams, Discord)
                 if( _deviceEnumerator.HasDefaultAudioEndpoint(DataFlow.Capture, Role.Communications) )
                 {
-                    defaultCommDeviceId = _deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Capture, Role.Communications)?.ID;
+                    MMDevice temp = _deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Capture, Role.Communications) ?? throw new NullReferenceException(nameof(_deviceEnumerator.GetDefaultAudioEndpoint));
+                    defaultCommDeviceId = temp.ID;
                 }
 
                 // Enumerate devices for the 'Capture' data flow (input devices)
@@ -280,6 +298,21 @@ namespace AudioDeviceManagerLibrary
             return devices;
         }
 
+        public bool SetDefaulInputDeviceByName(string name)
+        {
+            MMDeviceCollection devices = _deviceEnumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active);
+            IEnumerable<MMDevice> found = devices.Where(x => x.FriendlyName != null && x.FriendlyName.StartsWith(name));
+            if( found.Any() )
+            {
+                MMDevice device = found.First();
+                if( device != null )
+                    return SetDefaulInputDevice(device);
+
+            }
+
+            return false;
+
+        }
 
         public bool SetDefaulInputDeviceByIndex(int index)
         {
@@ -291,7 +324,7 @@ namespace AudioDeviceManagerLibrary
             return false;
         }
 
-        private bool SetDefaulInputDevice(MMDevice device)
+        private static bool SetDefaulInputDevice(MMDevice device)
         {
             if( device != null )
             {

@@ -2,7 +2,7 @@
   "profiles": {
     "AudioDeviceManager": {
       "commandName": "Project",
-      "commandLineArgs": "/input:2 /output:2"
+      "commandLineArgs": "/l /input:\"Microphone\" /output33:\"32 inch\""
     }
   }
 }
