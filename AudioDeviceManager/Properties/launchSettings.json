@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "AudioDeviceManager": {
+      "commandName": "Project",
+      "commandLineArgs": "/input:2 /output:2"
+    }
+  }
+}
